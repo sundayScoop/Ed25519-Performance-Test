@@ -17,14 +17,22 @@ class Point
     {
         // TODO: Check to see if 0 < num < N
 
+        int d = 0;
+
         Point newPoint = new Point(BigInteger.Zero, BigInteger.One);
 
         while (num.CompareTo(BigInteger.Zero) > 0)
         {
-            if ((num.And(BigInteger.One)).Equals(BigInteger.One)) newPoint = newPoint + point;
+            if ((num.And(BigInteger.One)).Equals(BigInteger.One))
+            {
+                newPoint = newPoint + point;
+                d += 1;
+            }
             point = point + point;
+            d += 1;
             num = num.ShiftRight(1);
         }
+        Console.WriteLine("D: " + d.ToString());
         return newPoint;
     }
 
@@ -74,7 +82,7 @@ class Program
             BigInteger priv = new BigInteger(priv_b).Mod(Ed25519.N); // Mod N to ensure size constraint
             BigInteger r = new BigInteger(r_b).Mod(Ed25519.N);
             BigInteger h = new BigInteger(h_b).Mod(Ed25519.N);
-
+            Console.WriteLine(r.ToString());
 
             Point R = Ed25519.G * r;
             BigInteger s = (r.Add(h.Multiply(priv))).Mod(Ed25519.N);
