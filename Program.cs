@@ -1,15 +1,12 @@
-using System.Collections;
-using System.Drawing;
-using System.Net;
 using System.Numerics;
 using System.Security.Cryptography;
 
-class Point
+readonly struct Point
 {
-    public BigInteger X { get; } // Change to private
-    public BigInteger Y { get; }
-    public BigInteger Z { get; }
-    public BigInteger T { get; }
+    readonly private BigInteger X { get; }
+    readonly private BigInteger Y { get; }
+    readonly private BigInteger Z { get; }
+    readonly private BigInteger T { get; }
 
     public Point(BigInteger x, BigInteger y, BigInteger z, BigInteger t)
     {
@@ -81,14 +78,14 @@ class Point
         BigInteger Z3 = Mod(F * G);
         return new Point(X3, Y3, Z3, T3);
     }
-    private static BigInteger Mod(in BigInteger a)
+    private static BigInteger Mod(BigInteger a)
     {
         BigInteger res = a % Ed25519.M;
         return res >= BigInteger.Zero ? res : Ed25519.M + res;
     }
 }
 
-readonly struct Ed25519
+readonly ref struct Ed25519
 {
     public static BigInteger M = BigInteger.Parse("57896044618658097711785492504343953926634992332820282019728792003956564819949");
     public static BigInteger N = BigInteger.Parse("7237005577332262213973186563042994240857116359379907606001950938285454250989");
@@ -117,9 +114,10 @@ class Program
     {
         ref readonly var G = ref Ed25519.G;
         int i = 0;
-        while (i < 100)
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        while (i < 1000)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             // random bytes for h, priv and r
             byte[] r_b = RandomNumberGenerator.GetBytes(32);
             byte[] h_b = RandomNumberGenerator.GetBytes(64);
@@ -133,28 +131,22 @@ class Program
 
             Point R = G * r;
             BigInteger s = Mod(r + (h * priv));
-            watch.Stop();
-            Console.WriteLine($"Total Sign Time: {watch.ElapsedMilliseconds} ms");
 
             var pub = G * priv;
-            watch.Start();
 
             ///// Verifying
             var point1 = G * s;
             var point2 = R + (pub * h);
 
-
             bool valid = point1.GetX().Equals(point2.GetX());
 
-            watch.Stop();
-            Console.WriteLine($"Total Verify Time: {watch.ElapsedMilliseconds} ms\n");
-            Console.WriteLine(valid);
             i += 1;
         }
+        watch.Stop();
+        Console.WriteLine($"Time: {watch.ElapsedMilliseconds}");
     }
-    private static BigInteger Mod(in BigInteger a)
+    private static BigInteger Mod(BigInteger a)
     {
-        //Console.WriteLine(a.ToString());
         BigInteger res = a % Ed25519.N;
         return res >= BigInteger.Zero ? res : Ed25519.N + res;
     }
